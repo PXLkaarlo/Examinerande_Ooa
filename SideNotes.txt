@@ -1,0 +1,58 @@
+@startuml
+title Boka Träningspass
+
+actor Client
+
+participant "BookingController" as Controller
+participant "InputFactory" as Factory
+participant "BookingService" as Service
+participant "TrainingSession (Domain)" as Domain
+participant "TrainingSessionRepository" as Repo
+database "Persistence" as DB
+
+Client -> Controller : POST /api/bookings
+
+Controller -> Controller : Validate ModelState
+alt invalid request
+    Controller --> Client : 400 BadRequest
+end
+
+Controller -> Factory : CreateBookingInput(request)
+Factory --> Controller : BookingInput
+
+Controller -> Service : BookTrainingSessionAsync(input)
+
+alt session full / already booked
+    Service -> Repo : GetById(sessionId)
+    Repo -> DB : Fetch session
+    DB --> Repo : data
+    Repo --> Service : domain model
+
+    Service --> Controller : Conflict
+    Controller --> Client : 409 Conflict
+else success
+    Service -> Repo : GetById(sessionId)
+    Repo -> DB : Fetch session
+    DB --> Repo : data
+    Repo --> Service : domain model
+
+    Service -> Domain : bookSpot(memberId)
+    Domain --> Service : updated session
+
+    Service -> Repo : Save(session)
+    Repo -> DB : Save changes
+    DB --> Repo : affected rows
+    Repo --> Service : result
+
+    alt success
+        Service --> Controller : Created
+        Controller --> Client : 201 Created
+    else failure
+        Service --> Controller : Failed
+        Controller --> Client : 400 BadRequest
+    end
+end
+
+@enduml
+
+Fill spara detta så jag vet hur det ser ut.

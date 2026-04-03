@@ -55,4 +55,49 @@ end
 
 @enduml
 
-Fill spara detta så jag vet hur det ser ut.
+@startuml
+title Aktivitetsdiagram - Boka träningspass
+
+start
+
+partition "Member" {
+  :Click "Book Session";
+}
+
+partition "Application Layer" {
+  :Fetch avalible TrainingSessions;
+  :View list of avalible TrainingSessions;
+}
+
+partition "Member" {
+  :Choose TrainingSession;
+}
+
+partition "Application Layer" {
+  :Validate booking;
+}
+
+partition "Domain Layer" {
+  if (Is membership valid?) then (Yes)
+    if (Are there avalible seats?) then (Yes)
+      :Create booking;
+      :Update avalible seats by -1;
+    else (No)
+      :Cancel booking (No avalible seats);
+      stop
+    endif
+  else (No)
+    :Cancel (Not valid Member);
+    stop
+  endif
+}
+
+partition "Application Layer" {
+  :Save booking;
+  :View booking confirmation;
+}
+
+stop
+@enduml
+
+Vill spara detta så jag vet hur det ser ut.
